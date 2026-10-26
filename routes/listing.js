@@ -25,6 +25,7 @@ router
         res.send(req.file);
     })
 
+    
 
 // CREATE(new & create route ) - New Route
 router.get("/new",isLoggedIn ,listingsController.renderNewForm);
