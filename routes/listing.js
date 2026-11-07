@@ -16,16 +16,12 @@ router
     // Index Route
     .get(wrapAsync(listingsController.index))
     // Create Route 
-    // .post(
-    //     isLoggedIn ,
-    //     validateListing , 
-    //     wrapAsync(listingsController.createListing)
-    // );
-    .post(upload.single("listing[image]") ,(req,res) =>{
-        console.log(req.file);
-        res.send(req.file);
-    })
-
+    .post(
+        isLoggedIn ,
+        upload.single("listing[image]") ,
+        validateListing , 
+        wrapAsync(listingsController.createListing)
+    );
     
 
 // CREATE(new & create route ) - New Route
@@ -40,6 +36,7 @@ router
     .put(
         isLoggedIn , 
         isOwner , 
+        upload.single("listing[image]") ,
         validateListing , 
         wrapAsync(listingsController.updateListing)
     )

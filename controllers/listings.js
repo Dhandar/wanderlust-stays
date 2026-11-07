@@ -30,11 +30,14 @@ module.exports.showListing = async(req,res) =>{
 }
 
 module.exports.createListing = async(req,res,next) =>{
-        const  newListing = new Listing(req.body.listing) ;
-        newListing.owner = req.user._id ;
-        await newListing.save();
-        req.flash("success" ,"New Listing created!!");
-        res.redirect("/Listings") ;
+    let url = req.file.path ;
+    let filename = req.file.filename ;
+    const  newListing = new Listing(req.body.listing) ;
+    newListing.owner = req.user._id ;    
+    newListing.image = { url,filename } ;   
+    await newListing.save();
+    req.flash("success" ,"New Listing created!!");
+    res.redirect("/Listings") ;
 }
 
 module.exports.renderEditForm = async(req,res) =>{
@@ -44,14 +47,38 @@ module.exports.renderEditForm = async(req,res) =>{
         req.flash("error" ,"Listing you requested does not exits!!");
         return res.redirect("/listings");
     }
-    res.render("listings/edit.ejs",{listing}) ;
+    let originalImageUrl = listing.image.url ;
+    if (originalImageUrl.includes("res.cloudinary.com")) {
+        originalImageUrl = originalImageUrl.replace(
+            "/upload/",
+            "/upload/h_300,w_250/"
+        );
+    }else if (originalImageUrl.includes("images.unsplash.com")) {
+        originalImageUrl = originalImageUrl.replace(
+            "w=800",
+            "w=250"
+        );
+    }
+
+    // originalImageUrl = originalImageUrl.replace("/upload" ,"/upload/w_250") ;
+    console.log(listing.image.url);
+    console.log(originalImageUrl);
+    res.render("listings/edit.ejs",{ listing , originalImageUrl }) ;
 }
 
 module.exports.updateListing = async(req,res) =>{
-        let {id} = req.params ;
-        await Listing.findByIdAndUpdate(id,{...req.body.listing})  ;
-        req.flash("success" ,"Listing Updeted!!");
-        res.redirect(`/Listings/${id}`) ;
+    let {id} = req.params ;
+    let listing = await Listing.findByIdAndUpdate(id,{...req.body.listing})  ;
+
+    // upadte new uploaded image 
+    if(typeof req.file != "undefined"){
+        let url = req.file.path ;
+        let filename = req.file.filename ;
+        listing.image = { url,filename };
+        await listing.save() ;
+    }
+    req.flash("success" ,"Listing Updeted!!");
+    res.redirect(`/Listings/${id}`) ;
 }
 
 module.exports.destroyListing = async(req,res) =>{
